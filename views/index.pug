@@ -4,5 +4,23 @@ link(rel='stylesheet' href='css/style.css')
 head
     title My First Full Stack
 body
-    h1 Simple TODO APP
-    p TODO: Complete the app!
+    main
+        h1 Todo
+        p by Kayden Humphries
+        form(action="/", method="post") 
+            .input-area 
+                input(type="text" name="todo" placeholder="Add your todo")
+                input(type="submit" value="+").add-button
+
+        ul.list
+            - for (let i = 0; i < tasks.length; i++)
+                li.todo-item
+                    p= tasks[i].task
+                    form(action="/delete", method="post")
+                        input(type="hidden" name="id" value=tasks[i].id)
+                        input(type="submit" value="X")
+
+        if tasks.length == 0
+            p.list-det Your list is empty
+        else 
+            p.list-det You have #{tasks.length} tasks

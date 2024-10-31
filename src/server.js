@@ -19,23 +19,61 @@ app.set('view engine', 'pug')
 app.use(express.urlencoded({ extended: false }))
 
 app.get('/', function (req, res) {
-    //TODO You will need to do a SQL select here
-    //TODO You will need to update the code below!
     console.log('GET called')
-    res.render('index')
 
+    const local = { tasks: [] }
+    db.each('SELECT id, task FROM todo', function (err, row) {
+        if (err) {
+        console.log(err)
+        } else {
+        local.tasks.push({ id: row.id, task: row.task })
+        }
+    }, function (err, numrows) {
+        if (!err) {
+        res.render('index', local)
+        } else {
+        console.log(err)
+        }
+    })
 })
 
 app.post('/', function (req, res) {
-    console.log('adding todo item')
-    //TODO You will need to to do a SQL Insert here
+    const todo = req.body.todo
+    // If todo is empty, simply continue without adding to db
+    if (!todo) { 
+        res.redirect("/");
+        return;
+    }
 
+    console.log('Adding todo item')
+
+    // Prepare insert statement using parametrized statement
+    // No extra sanitization is needed here as using prepared parameterized statements is enough
+    const stmt = db.prepare('INSERT INTO todo (task) VALUES (?)')
+    stmt.run(todo)
+    stmt.finalize()
+
+    // Redirect to main page
+    res.redirect("/")
 })
 
 app.post('/delete', function (req, res) {
-    console.log('deleting todo item')
-    //TODO you will need to delete here
+    // Get the item id
+    const item_id = req.body.id;
+    console.log('Deleting todo item with id ' + item_id + "...")
+    
+    // Check if the item id is a valid number
+    if (isNaN(Number(item_id))) {
+        console.log("Invalid todo item id")
+    } else {
+        // Prepare delete statement using parametrized statement
+        const stmt = db.prepare('DELETE FROM todo where id = (?)')
+        stmt.run(req.body.id)
+        stmt.finalize()
+    }
 
+    // Redirect to main page
+    res.redirect("/")
 })
 
 // Start the web server
